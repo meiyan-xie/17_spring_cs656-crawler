@@ -42,7 +42,14 @@ for i in range(1, 4):
 
     r2 = requests.get(gen_url)
     print(r2.content)
-    
+    '''
+    r2 is the respone of the second request,
+    it is a json, inside the json is a html.
+    we need to parse the html
+    '''
+
+
+
 
 
 
