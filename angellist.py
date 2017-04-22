@@ -39,13 +39,16 @@ class PreProcessor():
     # Headers
     req_headers = {}
 
+    # Maximum number of pages to fetch
+    total_pages = 25
+
     def ajaxURLList(self):
         url_list = []
 
         # Get headers
         self.getHeaders()
 
-        for page in range(1, 5):
+        for page in range(1, self.total_pages + 1):
             search_req_body = {'filter_data[company_types][]': 'Startup',
                                'filter_data[stage][]': 'Seed',
                                'filter_data[stage][]': 'Series A',
@@ -61,6 +64,10 @@ class PreProcessor():
 
             # Parse parameters from json
             params = json.loads(res.text)
+
+            if 'ids' not in params:
+                print(res.text)
+                break
 
             # Generate url
             gen_url = ''
@@ -82,6 +89,9 @@ class PreProcessor():
 
             # Append to result
             url_list.append(gen_url)
+
+            # Print progress
+            print('Generating AJAX url: %d / %d' % (page, self.total_pages))
 
         return url_list
 
