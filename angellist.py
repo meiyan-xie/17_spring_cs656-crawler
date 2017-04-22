@@ -1,55 +1,96 @@
-import requests
 import json
-import urllib.parse
-
-url = 'https://angel.co/company_filters/search_data'
-headers = {'X-CSRF-Token': '2F3FB5ers08QkMtYXkrYpUqYnHJU+Z9MHfVFFOGuadY=', 'cookie': '_angellist=eca52b21687fd60390592a1a72f2fff4'}
-
-# just get first three pages
-for i in range(1, 4):
-    body = {'filter_data[company_types][]': 'Startup', 'filter_data[stage][]': 'Seed', 'filter_data[stage][]': 'Series A', 'filter_data[stage][]': 'Series B', 'filter_data[stage][]': 'Series C', 'sort': 'Total Raised', 'page': i}
-
-    # r1 is the response of the first request
-    r1 = requests.post(url, headers=headers, data=body)
-    obj = json.loads(r1.text)
-    print(obj)
-
-    '''
-    from the first request,
-    we will get 20 company ids and other parameters.
-    the response is a json
-    '''
-
-    # Generate url
-    gen_url = ''
-
-    # Add parameters
-    for key in obj:
-        if key != 'ids':
-            gen_url += '&' + key + '=' + str(obj[key])
-
-    # Add ids
-    gen_url_ids = ''
-    for _id in obj['ids']:
-        gen_url_ids = gen_url_ids + '&ids%5B%5D=' + str(_id)
-
-    gen_url += gen_url_ids
-
-    # Append hostname
-    gen_url = 'https://angel.co/companies/startups?' + gen_url[1:]
-
-    print(gen_url)
-
-    r2 = requests.get(gen_url)
-    print(r2.content)
-    '''
-    r2 is the respone of the second request,
-    it is a json, inside the json is a html.
-    we need to parse the html
-    '''
+import re
+import requests
+import scrapy
 
 
+class StartupCrawler(scrapy.Spider):
+    name = 'glassdoor'
+    start_urls = []
+
+    custom_settings = {
+        'USER_AGENT': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
+    }
+
+    def __init__(self):
+        # Generate ajax urls
+        pp = PreProcessor()
+        self.start_urls = pp.ajaxURLList()
+
+    def parse(self, response):
+        # Extract HTML from JSON
+        obj = json.loads(response.text)
+
+        # Create new selector from extracted html
+        selector = scrapy.Selector(text=obj['html'], type="html")
+
+        for company in selector.css('div.startup'):
+            details_url = response.urljoin(company.css('a.startup-link::attr("href")').extract_first())
+            yield {'url': details_url}
+
+        # for  in response.css('div.panel-heading'):
+        #     details_url = response.urljoin(company.css('a::attr("href")').extract_first())
+
+        #     if details_url is not None:
+        #         yield scrapy.Request(details_url, callback=self.parse_company)
 
 
+class PreProcessor():
+    # Headers
+    req_headers = {}
 
+    def ajaxURLList(self):
+        url_list = []
 
+        # Get headers
+        self.getHeaders()
+
+        for page in range(1, 5):
+            search_req_body = {'filter_data[company_types][]': 'Startup',
+                               'filter_data[stage][]': 'Seed',
+                               'filter_data[stage][]': 'Series A',
+                               'filter_data[stage][]': 'Series B',
+                               'filter_data[stage][]': 'Series C',
+                               'sort': 'Total Raised',
+                               'page': page}
+
+            # Get parameters for next request
+            res = requests.post('https://angel.co/company_filters/search_data',
+                                headers=self.req_headers,
+                                data=search_req_body)
+
+            # Parse parameters from json
+            params = json.loads(res.text)
+
+            # Generate url
+            gen_url = ''
+
+            # Add parameters
+            for key in params:
+                if key != 'ids':
+                    gen_url += '&' + key + '=' + str(params[key])
+
+            # Add ids
+            gen_url_ids = ''
+            for _id in params['ids']:
+                gen_url_ids = gen_url_ids + '&ids%5B%5D=' + str(_id)
+
+            gen_url += gen_url_ids
+
+            # Append hostname
+            gen_url = 'https://angel.co/companies/startups?' + gen_url[1:]
+
+            # Append to result
+            url_list.append(gen_url)
+
+        return url_list
+
+    def getHeaders(self):
+        # Send request
+        res = requests.get('https://angel.co/companies')
+
+        # Get cookie
+        self.req_headers['cookie'] = '_angellist=' + res.cookies['_angellist']
+
+        # Get CSRF token
+        self.req_headers['X-CSRF-Token'] = re.search('<meta content="(.+?)" name="csrf-token" />', res.text).groups()[0]
