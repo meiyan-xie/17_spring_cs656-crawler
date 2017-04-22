@@ -5,7 +5,7 @@ import scrapy
 
 
 class StartupCrawler(scrapy.Spider):
-    name = 'glassdoor'
+    name = 'angellist'
     start_urls = []
 
     custom_settings = {
