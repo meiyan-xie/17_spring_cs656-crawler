@@ -7,6 +7,7 @@ import scrapy
 class StartupCrawler(scrapy.Spider):
     name = 'angellist'
     start_urls = []
+    session_cookie = ''
 
     custom_settings = {
         'USER_AGENT': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
@@ -16,6 +17,7 @@ class StartupCrawler(scrapy.Spider):
         # Generate ajax urls
         pp = PreProcessor()
         self.start_urls = pp.ajaxURLList()
+        self.session_cookie = pp.session_cookie
 
     def parse(self, response):
         # Extract HTML from JSON
@@ -26,22 +28,31 @@ class StartupCrawler(scrapy.Spider):
 
         for company in selector.css('div.startup'):
             details_url = response.urljoin(company.css('a.startup-link::attr("href")').extract_first())
-            yield {'url': details_url}
+            # yield {'url': details_url}
 
-        # for  in response.css('div.panel-heading'):
-        #     details_url = response.urljoin(company.css('a::attr("href")').extract_first())
+            if details_url is not None:
+                yield scrapy.Request(details_url, cookies={'_angellist': self.session_cookie}, callback=self.parse_company)
 
-        #     if details_url is not None:
-        #         yield scrapy.Request(details_url, callback=self.parse_company)
+    def parse_company(self, response):
+        result = {}
+        result['company_name'] = response.css('h1.s-vgBottom0_5::text').extract_first()
+        result['url'] = response.url
+        '''
+
+        here should add some code to scrapy data from details page.
+        I already start scrapy the 'company_name'.
+
+        '''
+        yield result
 
 
 class PreProcessor():
     # Headers
     req_headers = {}
+    session_cookie = ''
 
-    # Maximum number of pages to fetch
-    total_pages = 25
-
+    # Maximum number of pages to fetch, set 1 just for test convinent
+    total_pages = 1
     def ajaxURLList(self):
         url_list = []
 
@@ -66,7 +77,7 @@ class PreProcessor():
             params = json.loads(res.text)
 
             if 'ids' not in params:
-                print(res.text)
+                # print(res.text)
                 break
 
             # Generate url
@@ -97,10 +108,12 @@ class PreProcessor():
 
     def getHeaders(self):
         # Send request
-        res = requests.get('https://angel.co/companies')
+        # cookie 'de7af8c01bea49941f6fab2f49e79b55' should be replaced by your own cookie when you login
+        res = requests.get('https://angel.co/companies', cookies={'_angellist': 'de7af8c01bea49941f6fab2f49e79b55'})
 
         # Get cookie
         self.req_headers['cookie'] = '_angellist=' + res.cookies['_angellist']
+        self.session_cookie = res.cookies['_angellist']
 
         # Get CSRF token
         self.req_headers['X-CSRF-Token'] = re.search('<meta content="(.+?)" name="csrf-token" />', res.text).groups()[0]
