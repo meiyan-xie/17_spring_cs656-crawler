@@ -37,9 +37,12 @@ class StartupCrawler(scrapy.Spider):
         result = {}
         result['company_name'] = response.css('h1.s-vgBottom0_5::text').extract_first()
         result['url'] = response.url
+        # Need to make sure what is the output looks like.
         result['area'] = response.css('a.tag::text').extract_first()
         result['stage'] = response.css('div.type::text').extract_first()
         result['employees'] = response.css('span.js-company_size::text').extract_first()
+        # Not sure whether this line below is correct. Not test yet.
+        result['market'] = response.css('span.js-market-tags::text').extract_first()
 
         '''
 
@@ -114,7 +117,7 @@ class PreProcessor():
     def getHeaders(self):
         # Send request
         # cookie 'de7af8c01bea49941f6fab2f49e79b55' should be replaced by your own cookie when you login
-        res = requests.get('https://angel.co/companies', cookies={'_angellist': 'bb2eca11455d6d27e3d3fa0b1310572a'})
+        res = requests.get('https://angel.co/companies')
 
         # Get cookie
         self.req_headers['cookie'] = '_angellist=' + res.cookies['_angellist']
