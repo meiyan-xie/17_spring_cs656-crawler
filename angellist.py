@@ -34,23 +34,20 @@ class StartupCrawler(scrapy.Spider):
                 yield scrapy.Request(details_url, cookies={'_angellist': self.session_cookie}, callback=self.parse_company)
 
     def parse_company(self, response):
-		result = {}
-		result['company_name'] = response.css('h1.s-vgBottom0_5::text').extract_first()
-		result['url']          = response.url
-		result['area']         = response.css('a.tag::text').extract_first()
-		result['stage']        = response.css('div.type::text').extract_first()
-		result['employees']    = response.css('span.js-company_size::text').extract_first()
-		
-		
-		yield result
-    	
-        #'''
+        result = {}
+        result['company_name'] = response.css('h1.s-vgBottom0_5::text').extract_first()
+        result['url'] = response.url
+        result['area'] = response.css('a.tag::text').extract_first()
+        result['stage'] = response.css('div.type::text').extract_first()
+        result['employees'] = response.css('span.js-company_size::text').extract_first()
 
-        #here should add some code to scrapy data from details page.
-        #I already start scrapy the 'company_name'.
+        '''
 
-        #'''
-        
+        here should add some code to scrapy data from details page.
+        I already start scrapy the 'company_name'.
+
+        '''
+        yield result
 
 
 class PreProcessor():
@@ -59,7 +56,8 @@ class PreProcessor():
     session_cookie = ''
 
     # Maximum number of pages to fetch, set 1 just for test convinent
-    total_pages = 3 
+    total_pages = 1
+
     def ajaxURLList(self):
         url_list = []
 
