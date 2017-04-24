@@ -34,16 +34,23 @@ class StartupCrawler(scrapy.Spider):
                 yield scrapy.Request(details_url, cookies={'_angellist': self.session_cookie}, callback=self.parse_company)
 
     def parse_company(self, response):
-        result = {}
-        result['company_name'] = response.css('h1.s-vgBottom0_5::text').extract_first()
-        result['url'] = response.url
-        '''
+		result = {}
+		result['company_name'] = response.css('h1.s-vgBottom0_5::text').extract_first()
+		result['url']          = response.url
+		result['area']         = response.css('a.tag::text').extract_first()
+		result['stage']        = response.css('div.type::text').extract_first()
+		result['employees']    = response.css('span.js-company_size::text').extract_first()
+		
+		
+		yield result
+    	
+        #'''
 
-        here should add some code to scrapy data from details page.
-        I already start scrapy the 'company_name'.
+        #here should add some code to scrapy data from details page.
+        #I already start scrapy the 'company_name'.
 
-        '''
-        yield result
+        #'''
+        
 
 
 class PreProcessor():
@@ -52,7 +59,7 @@ class PreProcessor():
     session_cookie = ''
 
     # Maximum number of pages to fetch, set 1 just for test convinent
-    total_pages = 1
+    total_pages = 3 
     def ajaxURLList(self):
         url_list = []
 
@@ -109,7 +116,7 @@ class PreProcessor():
     def getHeaders(self):
         # Send request
         # cookie 'de7af8c01bea49941f6fab2f49e79b55' should be replaced by your own cookie when you login
-        res = requests.get('https://angel.co/companies', cookies={'_angellist': 'de7af8c01bea49941f6fab2f49e79b55'})
+        res = requests.get('https://angel.co/companies', cookies={'_angellist': 'bb2eca11455d6d27e3d3fa0b1310572a'})
 
         # Get cookie
         self.req_headers['cookie'] = '_angellist=' + res.cookies['_angellist']
