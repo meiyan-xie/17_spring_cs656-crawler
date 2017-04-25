@@ -101,7 +101,7 @@ class PreProcessor():
     session_cookie = ''
 
     # Maximum number of pages to fetch, set 1 just for test convinent
-    total_pages = 25
+    total_pages = 13
 
     def ajaxURLList(self):
         url_list = []
@@ -163,8 +163,8 @@ class PreProcessor():
     def getHeaders(self):
         # Send request
         # cookie 'de7af8c01bea49941f6fab2f49e79b55' should be replaced by your own cookie when you login
-        #res = requests.get('https://angel.co/companies')
-        res = requests.get('https://angel.co/companies', cookies={'_angellist': 'e9e67ddd86e89419006dd2bf1e34e272'})
+        res = requests.get('https://angel.co/companies')
+        # res = requests.get('https://angel.co/companies', cookies={'_angellist': 'f8735383c6e8e40aef39bfe3367a37ec'})
 
         # Get cookie
         self.req_headers['cookie'] = '_angellist=' + res.cookies['_angellist']
