@@ -2,6 +2,8 @@ import json
 import re
 import requests
 import scrapy
+import string
+import random
 
 
 class StartupCrawler(scrapy.Spider):
@@ -10,7 +12,9 @@ class StartupCrawler(scrapy.Spider):
     session_cookie = ''
 
     custom_settings = {
-        'USER_AGENT': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
+        # 'USER_AGENT': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
+        'USER_AGENT': ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=32)),
+        'REDIRECT_ENABLED': False
     }
 
     def __init__(self):
@@ -21,7 +25,11 @@ class StartupCrawler(scrapy.Spider):
 
     def parse(self, response):
         # Extract HTML from JSON
-        obj = json.loads(response.text)
+        try:
+            obj = json.loads(response.text)
+        except Exception as e:
+            print('Failed to parse JSON (ajaxURLList)')
+            print(response.text)
 
         # Create new selector from extracted html
         selector = scrapy.Selector(text=obj['html'], type="html")
@@ -37,12 +45,46 @@ class StartupCrawler(scrapy.Spider):
         result = {}
         result['company_name'] = response.css('h1.s-vgBottom0_5::text').extract_first()
         result['url'] = response.url
+
+        # Check whether exit. (not startup)
+        if (response.css('div.green::text').extract_first() is None):
+            result['exit'] = False
+        else:
+            result['exit'] = True
+
+        result['Seed'] = None
+        result['Series A'] = None
+        result['Series B'] = None
+        result['Series C'] = None
+
+        for fund in response.css('li.startup_round'):
+            fund_type = fund.css('div.type::text').extract_first()
+            amount = fund.css('div.raised').css('a::text').extract_first()
+
+            if amount is None:
+                continue
+
+            if ('Series A' in fund_type):
+                result['Series A'] = amount
+            elif('Series B' in fund_type):
+                result['Series B'] = amount
+            elif('Series C' in fund_type):
+                result['Series C'] = amount
+            elif('Seed' in fund_type):
+                result['Seed'] = amount
+
         # Need to make sure what is the output looks like.
         result['area'] = response.css('a.tag::text').extract_first()
         result['stage'] = response.css('div.type::text').extract_first()
         result['employees'] = response.css('span.js-company_size::text').extract_first()
         # Not sure whether this line below is correct. Not test yet.
-        result['market'] = response.css('span.js-market-tags::text').extract_first()
+
+        market_result = ''
+        for mt in response.css('span.js-market_tags').css('a::text').extract():
+            if mt is not None:
+                market_result += mt + ';'
+
+        result['market'] = market_result
 
         '''
 
@@ -59,7 +101,7 @@ class PreProcessor():
     session_cookie = ''
 
     # Maximum number of pages to fetch, set 1 just for test convinent
-    total_pages = 1
+    total_pages = 25
 
     def ajaxURLList(self):
         url_list = []
@@ -82,7 +124,11 @@ class PreProcessor():
                                 data=search_req_body)
 
             # Parse parameters from json
-            params = json.loads(res.text)
+            try:
+                params = json.loads(res.text)
+            except Exception as e:
+                print('Failed to parse JSON (ajaxURLList)')
+                print(res.text)
 
             if 'ids' not in params:
                 # print(res.text)
@@ -117,7 +163,8 @@ class PreProcessor():
     def getHeaders(self):
         # Send request
         # cookie 'de7af8c01bea49941f6fab2f49e79b55' should be replaced by your own cookie when you login
-        res = requests.get('https://angel.co/companies')
+        #res = requests.get('https://angel.co/companies')
+        res = requests.get('https://angel.co/companies', cookies={'_angellist': 'e9e67ddd86e89419006dd2bf1e34e272'})
 
         # Get cookie
         self.req_headers['cookie'] = '_angellist=' + res.cookies['_angellist']
