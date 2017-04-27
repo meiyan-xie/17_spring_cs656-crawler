@@ -36,7 +36,7 @@ class StartupCrawler(scrapy.Spider):
 
         for company in selector.css('div.startup'):
             details_url = response.urljoin(company.css('a.startup-link::attr("href")').extract_first())
-            # yield {'url': details_url}
+        # yield {'url': details_url}
 
             if details_url is not None:
                 yield scrapy.Request(details_url, cookies={'_angellist': self.session_cookie}, callback=self.parse_company)
@@ -46,7 +46,7 @@ class StartupCrawler(scrapy.Spider):
         result['company_name'] = response.css('h1.s-vgBottom0_5::text').extract_first()
         result['url'] = response.url
 
-        # Check whether exit. (not startup)
+        # Check whether exit. (not startup anymore)
         if (response.css('div.green::text').extract_first() is None):
             result['exit'] = False
         else:
@@ -73,25 +73,15 @@ class StartupCrawler(scrapy.Spider):
             elif('Seed' in fund_type):
                 result['Seed'] = amount
 
-        # Need to make sure what is the output looks like.
-        result['area'] = response.css('a.tag::text').extract_first()
-        result['stage'] = response.css('div.type::text').extract_first()
-        result['employees'] = response.css('span.js-company_size::text').extract_first()
-        # Not sure whether this line below is correct. Not test yet.
-
         market_result = ''
         for mt in response.css('span.js-market_tags').css('a::text').extract():
             if mt is not None:
                 market_result += mt + ';'
 
         result['market'] = market_result
-
-        '''
-
-        here should add some code to scrapy data from details page.
-        I already start scrapy the 'company_name'.
-
-        '''
+        result['area'] = response.css('a.tag::text').extract_first()
+        result['stage'] = response.css('div.type::text').extract_first()
+        result['employees'] = response.css('span.js-company_size::text').extract_first()
         yield result
 
 
@@ -100,8 +90,8 @@ class PreProcessor():
     req_headers = {}
     session_cookie = ''
 
-    # Maximum number of pages to fetch, set 1 just for test convinent
-    total_pages = 13
+    # Maximum number of pages to fetch
+    total_pages = 20
 
     def ajaxURLList(self):
         url_list = []
@@ -162,11 +152,11 @@ class PreProcessor():
 
     def getHeaders(self):
         # Send request
-        # cookie 'de7af8c01bea49941f6fab2f49e79b55' should be replaced by your own cookie when you login
         res = requests.get('https://angel.co/companies')
-        # res = requests.get('https://angel.co/companies', cookies={'_angellist': 'f8735383c6e8e40aef39bfe3367a37ec'})
 
         # Get cookie
+        # cookie 'de7af8c01bea49941f6fab2f49e79b55' should be replaced by your own cookie when you login
+        # res = requests.get('https://angel.co/companies', cookies={'_angellist': 'f8735383c6e8e40aef39bfe3367a37ec'})
         self.req_headers['cookie'] = '_angellist=' + res.cookies['_angellist']
         self.session_cookie = res.cookies['_angellist']
 

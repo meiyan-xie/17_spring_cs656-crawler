@@ -1,0 +1,7 @@
+[
+{"company_name": "\nMendix\n", "url": "https://angel.co/mendix", "exit": false, "Seed": null, "Series A": "$13,000,000", "Series B": "$25,000,000", "Series C": null, "market": "PaaS;Mobile;Enterprise Software;Application Platforms;", "area": "Boston", "stage": "\nSeries B\n", "employees": "\n51-200\n"},
+{"company_name": "\nKrossover\n", "url": "https://angel.co/krossover", "exit": false, "Seed": null, "Series A": null, "Series B": "$20,000,000", "Series C": null, "market": "Video;Sports;Analytics;Social Games;", "area": "New York City", "stage": "\nSeries B\n", "employees": "\n1-10\n"},
+{"company_name": "\nTactus Technology\n", "url": "https://angel.co/tactus-technology", "exit": false, "Seed": null, "Series A": "$6,000,000", "Series B": "$13,500,000", "Series C": null, "market": "Human Computer Interaction;", "area": "Fremont", "stage": "\nSeries B\n", "employees": "\n11-50\n"},
+{"company_name": "\nStyleSeat\n", "url": "https://angel.co/styleseat", "exit": false, "Seed": "$4,000,000", "Series A": "$10,300,000", "Series B": "$25,000,000", "Series C": null, "market": "Beauty;Marketplaces;Lead Generation;Online Reservations;", "area": "San Francisco", "stage": "\nSeries B\n", "employees": "\n51-200\n"},
+{"company_name": "\nKraken Digital Asset Exchange\n", "url": "https://angel.co/kraken", "exit": false, "Seed": null, "Series A": "$5,000,000", "Series B": "Unknown", "Series C": null, "market": "Bitcoin;Blockchains;Bitcoin Exchange;Financial Exchanges;", "area": "San Francisco", "stage": "\nSeries B\n", "employees": "\n51-200\n"}
+]
